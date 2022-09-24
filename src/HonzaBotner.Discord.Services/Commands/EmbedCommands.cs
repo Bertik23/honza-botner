@@ -68,13 +68,14 @@ public class EmbedCommands: ApplicationCommandModule
         {
             return new[]
             {
-                new DiscordButtonComponent(ButtonStyle.Danger,
-                    "create-embed-cancel", "Cancel"),
+                new DiscordButtonComponent(ButtonStyle.Danger, "create-embed-cancel", "Cancel"),
                 new DiscordButtonComponent(ButtonStyle.Primary, "create-embed-edit-title", "Edit title"),
+                new DiscordButtonComponent(ButtonStyle.Primary, "create-embed-edit-description", "Edit description"),
+                new DiscordButtonComponent(ButtonStyle.Primary, "create-embed-edit-color","Edit color"),
                 new DiscordButtonComponent(ButtonStyle.Success, "create-embed-send", "Send")
             };
         }
-        DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder() { Title = "Title", Description = "Description" };
+        DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder() { Title = "Title", Description = "Description", Color = new DiscordColor("000000")};
         DiscordInteractionResponseBuilder responseBuilder =
             new DiscordInteractionResponseBuilder()
                 .AsEphemeral(true)
@@ -118,7 +119,7 @@ public class EmbedCommands: ApplicationCommandModule
                 var modifiedEmbed = new DiscordEmbedBuilder(embed);
                 var modal = new DiscordInteractionResponseBuilder().WithTitle("Edit title")
                     .WithCustomId("create-embed-edit-title-modal")
-                    .AddComponents(new TextInputComponent("Title", "title", required: true));
+                    .AddComponents(new TextInputComponent("Title", "title", required: true, value: embed.Title));
                 await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
                 var modalResult = await interactivity.WaitForModalAsync("create-embed-edit-title-modal");
                 modifiedEmbed.WithTitle(modalResult.Result.Values["title"]);
@@ -128,6 +129,38 @@ public class EmbedCommands: ApplicationCommandModule
                 );
                 await modalResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                     new DiscordInteractionResponseBuilder().WithContent("title edited").AsEphemeral(true));
+            }else if (result.Result.Id.EndsWith("edit-description"))
+            {
+                var embed = result.Result.Message.Embeds[0];
+                var modifiedEmbed = new DiscordEmbedBuilder(embed);
+                var modal = new DiscordInteractionResponseBuilder().WithTitle("Edit description")
+                    .WithCustomId("create-embed-edit-description-modal")
+                    .AddComponents(new TextInputComponent("Description", "description", required: true, value: embed.Description));
+                await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+                var modalResult = await interactivity.WaitForModalAsync("create-embed-edit-description-modal");
+                modifiedEmbed.WithDescription(modalResult.Result.Values["description"]);
+                await ctx.EditResponseAsync(
+                    new DiscordWebhookBuilder().AddEmbed(modifiedEmbed.Build())
+                        .AddComponents(createEmbedMessageComponents())
+                );
+                await modalResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("description edited").AsEphemeral(true));
+            } else if (result.Result.Id.EndsWith("edit-color"))
+            {
+                var embed = result.Result.Message.Embeds[0];
+                var modifiedEmbed = new DiscordEmbedBuilder(embed);
+                var modal = new DiscordInteractionResponseBuilder().WithTitle("Edit color")
+                    .WithCustomId("create-embed-edit-color-modal")
+                    .AddComponents(new TextInputComponent("Color", "color", required: true));
+                await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+                var modalResult = await interactivity.WaitForModalAsync("create-embed-edit-color-modal");
+                modifiedEmbed.WithColor(new DiscordColor(modalResult.Result.Values["color"]));
+                await ctx.EditResponseAsync(
+                    new DiscordWebhookBuilder().AddEmbed(modifiedEmbed.Build())
+                        .AddComponents(createEmbedMessageComponents())
+                );
+                await modalResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("color edited").AsEphemeral(true));
             }
         }
     }
