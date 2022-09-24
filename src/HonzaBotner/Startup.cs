@@ -73,6 +73,7 @@ public class Startup
                 }, commands =>
                 {
                     commands.RegisterCommands<BotCommands>();
+                    commands.RegisterCommands<EmbedCommands>();
                     commands.RegisterCommands<EmoteCommands>(guildId);
                     commands.RegisterCommands<FunCommands>();
                     commands.RegisterCommands<MemberCommands>(guildId);

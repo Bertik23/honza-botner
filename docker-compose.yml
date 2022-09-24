@@ -2,7 +2,7 @@ version: "3"
 services:
   postgres-botner:
     container_name: postgres-botner
-    image: postgres
+    image: postgres:12
     environment:
       POSTGRES_USER: honza-bot
       POSTGRES_PASSWORD: postgres
